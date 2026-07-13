@@ -62,7 +62,7 @@ def main():
 
     # 2. Create KV Namespace
     print("[INFO] Creating Cloudflare KV Namespace...")
-    kv_create = run_command("npx wrangler kv:namespace create TEMP_MAIL_KV")
+    kv_create = run_command("npx wrangler kv namespace create TEMP_MAIL_KV")
     if not kv_create or kv_create.returncode != 0:
         print("[ERROR] Failed to create KV Namespace. Details:")
         if kv_create:
