@@ -1,5 +1,5 @@
 #!/bin/bash
-# ZipLoot Private Serverless Temp Mail Installer
+# [ZipLoot] Private Temp Mail Installer
 # ==============================================
 
 # Colors for output
@@ -14,9 +14,14 @@ clear
 echo -e "${CYAN}==============================================${NC}"
 echo -e "${CYAN}   ⚡ ZIPLOOT PRIVATE TEMP MAIL CONFIGURATOR${NC}"
 echo -e "${CYAN}==============================================${NC}"
-echo -e "${GREEN}   Serverless | Cloudflare Workers | Vercel | \$0${NC}"
+echo -e "${GREEN}   Serverless | Cloudflare Workers & Pages | \$0${NC}"
 echo -e "${CYAN}==============================================${NC}"
 echo
+
+# Redirect home directories to avoid Windows Junction perm errors (if run on Git Bash/WSL on Windows)
+export USERPROFILE="C:/Users/user/AppData/Local"
+export HOMEPATH="/Users/user/AppData/Local"
+export HOME="C:/Users/user/AppData/Local"
 
 # 1. Check Cloudflare Login
 echo -e "${BLUE}[INFO] Checking Cloudflare authentication status...${NC}"
@@ -33,7 +38,6 @@ echo
 # 2. Create KV Namespace
 echo -e "${BLUE}[INFO] Creating Cloudflare KV Namespace...${NC}"
 kvOutput=$(npx -y wrangler kv:namespace create TEMP_MAIL_KV 2>&1)
-echo "$kvOutput"
 
 kvId=$(echo "$kvOutput" | grep -oE 'id\s*=\s*"[a-f0-9]{32}"' | head -n 1 | cut -d'"' -f2)
 if [ -z "$kvId" ]; then
@@ -46,7 +50,7 @@ if [ -z "$kvId" ]; then
 else
     echo -e "${GREEN}[SUCCESS] KV Namespace Created! ID: $kvId${NC}"
     
-    # Update wrangler.json with KV ID using temporary Python helper (jq independent)
+    # Update wrangler.json
     python3 -c "
 import json
 with open('wrangler.json', 'r') as f:
@@ -88,16 +92,47 @@ npm install
 
 echo -e "${BLUE}[INFO] Deploying Worker to Cloudflare...${NC}"
 deployOutput=$(npx -y wrangler deploy 2>&1)
-echo "$deployOutput"
 
 workerUrl=$(echo "$deployOutput" | grep -oE 'https://unlimited-temp-mail\.[a-zA-Z0-9-]+\.workers\.dev' | head -n 1)
 if [ ! -z "$workerUrl" ]; then
     echo -e "${GREEN}[SUCCESS] Worker deployed successfully!${NC}"
     echo -e "${YELLOW}Worker URL: $workerUrl${NC}"
+else
+    echo -e "${YELLOW}[WARN] Could not automatically extract Worker URL.${NC}"
+    echo "$deployOutput"
 fi
 echo
 
-# 5. Cloudflare Email Routing instructions
+# 5. Inject Worker URL into public/index.html config
+if [ ! -z "$workerUrl" ]; then
+    python3 -c "
+with open('public/index.html', 'r') as f:
+    content = f.read()
+target = 'let workerApiUrl = localStorage.getItem(\"temp_mail_worker_url\") || \"\";'
+replacement = 'let workerApiUrl = localStorage.getItem(\"temp_mail_worker_url\") || \"$workerUrl\";'
+content = content.replace(target, replacement)
+with open('public/index.html', 'w') as f:
+    f.write(content)
+"
+    echo -e "${GREEN}[SUCCESS] Worker URL injected into Web Client config!${NC}"
+fi
+echo
+
+# 6. Deploy to Cloudflare Pages
+echo -e "${BLUE}[INFO] Deploying Web Client to Cloudflare Pages...${NC}"
+npx -y wrangler pages project create unlimited-temp-mail --production-branch main 2>&1 > /dev/null
+pagesOutput=$(npx -y wrangler pages deploy public --project-name unlimited-temp-mail 2>&1)
+
+pagesUrl=$(echo "$pagesOutput" | grep -oE 'https://unlimited-temp-mail\.[a-zA-Z0-9-]+\.pages\.dev' | head -n 1)
+if [ ! -z "$pagesUrl" ]; then
+    echo -e "${GREEN}[SUCCESS] Web Dashboard deployed successfully!${NC}"
+else
+    echo -e "${YELLOW}[WARN] Could not extract Pages URL.${NC}"
+    echo "$pagesOutput"
+fi
+echo
+
+# 7. Cloudflare Email Routing instructions
 echo -e "${CYAN}==============================================${NC}"
 echo -e "${GREEN}⚡ CLOUDFLARE EMAIL ROUTING SETUP${NC}"
 echo -e "${CYAN}==============================================${NC}"
@@ -110,16 +145,16 @@ echo "5. Destination: Select 'unlimited-temp-mail'."
 echo "6. Click Save. Now all emails sent to your domain route to your Worker!"
 echo
 
-# 6. Vercel deployment instructions
 echo -e "${CYAN}==============================================${NC}"
-echo -e "${GREEN}⚡ DEPLOY CLIENT DASHBOARD TO VERCEL${NC}"
+echo -e "${GREEN}🎉 DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
 echo -e "${CYAN}==============================================${NC}"
-echo "To host the beautiful client web dashboard for free:"
-echo "1. Create a free account on Vercel."
-echo "2. Install Vercel CLI locally (npm install -g vercel) or import to GitHub."
-echo "3. In this project folder, run command:"
-echo -e "   ${YELLOW}vercel --prod${NC}"
-echo "4. Open the deployed Vercel URL, click 'Setup Config' and enter your Worker URL!"
+if [ ! -z "$pagesUrl" ]; then
+    echo -e "${YELLOW}🔗 Web Dashboard: $pagesUrl${NC}"
+fi
+if [ ! -z "$workerUrl" ]; then
+    echo -e "${YELLOW}⚙️ Worker API: $workerUrl${NC}"
+fi
+echo -e "${CYAN}==============================================${NC}"
 echo
 
 read -p "Setup complete. Press Enter to exit..."
