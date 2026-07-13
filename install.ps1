@@ -109,7 +109,7 @@ try {
         $htmlPath = Join-Path $scriptDir "public/index.html"
         if (Test-Path $htmlPath) {
             $htmlContent = Get-Content $htmlPath -Raw
-            $htmlContent = $htmlContent -replace 'let workerApiUrl = localStorage\.getItem\("temp_mail_worker_url"\) \|\| "";', "let workerApiUrl = localStorage.getItem(`"temp_mail_worker_url`") || `"$workerUrl`";"
+            $htmlContent = $htmlContent -replace 'let workerApiUrl = localStorage\.getItem\("temp_mail_worker_url"\) \|\| "";', ('let workerApiUrl = localStorage.getItem("temp_mail_worker_url") || "' + $workerUrl + '";')
             Set-Content -Path $htmlPath -Value $htmlContent
             Write-Host "[SUCCESS] Worker URL injected into Web Client config!" -ForegroundColor Green
         }
