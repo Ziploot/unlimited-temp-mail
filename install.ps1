@@ -3,9 +3,9 @@
 try {
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "   ⚡ ZIPLOOT PRIVATE TEMP MAIL CONFIGURATOR" -ForegroundColor Cyan
+    Write-Host "   ZIPLOOT PRIVATE TEMP MAIL CONFIGURATOR" -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "   Serverless | Cloudflare Workers & Pages | \$0" -ForegroundColor Green
+    Write-Host "   Serverless | Cloudflare Workers & Pages | Free" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host
 
@@ -58,7 +58,7 @@ try {
             # 3. Prompt for Options
             Write-Host
             Write-Host "==============================================" -ForegroundColor Cyan
-            Write-Host "⚡ Optional Settings Configuration" -ForegroundColor Green
+            Write-Host "Settings Configuration" -ForegroundColor Green
             Write-Host "==============================================" -ForegroundColor Cyan
             
             $fwdEmail = Read-Host "[INPUT] Forward copy of all incoming emails to a Gmail/Real Address? (Leave blank to disable)"
@@ -136,7 +136,7 @@ try {
 
     # 7. Cloudflare Email Routing instructions
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "⚡ CLOUDFLARE EMAIL ROUTING SETUP" -ForegroundColor Green
+    Write-Host "CLOUDFLARE EMAIL ROUTING SETUP" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "To link your custom domain to this worker:"
     Write-Host "1. Go to Cloudflare Dashboard > [Your Domain] > Email Routing."
@@ -148,13 +148,13 @@ try {
     Write-Host
 
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "🎉 DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
+    Write-Host "DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
     if (-not [string]::IsNullOrEmpty($pagesUrl)) {
-        Write-Host "🔗 Web Dashboard: $pagesUrl" -ForegroundColor Yellow
+        Write-Host "Web Dashboard: $pagesUrl" -ForegroundColor Yellow
     }
     if (-not [string]::IsNullOrEmpty($workerUrl)) {
-        Write-Host "⚙️ Worker API: $workerUrl" -ForegroundColor Yellow
+        Write-Host "Worker API: $workerUrl" -ForegroundColor Yellow
     }
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host
