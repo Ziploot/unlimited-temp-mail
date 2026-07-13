@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZipLoot - Private Serverless Temporary Email Service</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top right, #111827, #030712);
+      --panel-bg: rgba(17, 24, 39, 0.6);
+      --panel-border: rgba(255, 255, 255, 0.05);
+      --primary: #818cf8;
+      --primary-hover: #6366f1;
+      --secondary: #10b981;
+      --secondary-hover: #059669;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dark: #6b7280;
+      --danger: #ef4444;
+      --glow: 0 0 25px rgba(129, 140, 248, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Background decorative elements */
+    .bg-glow-1 {
+      position: absolute;
+      top: -10%;
+      right: 10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(129,140,248,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .bg-glow-2 {
+      position: absolute;
+      bottom: 10%;
+      left: 5%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(3, 7, 18, 0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      font-size: 28px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 8px rgba(129, 140, 248, 0.4));
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-badge {
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      font-weight: bold;
+      background: rgba(129, 140, 248, 0.15);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(129, 140, 248, 0.2);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      border: none;
+      box-shadow: 0 4px 15px rgba(129, 140, 248, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover) 0%, #4f46e5 100%);
+      box-shadow: 0 4px 20px rgba(129, 140, 248, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-hover) 100%);
+      border: none;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, var(--secondary-hover) 0%, #047857 100%);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      z-index: 10;
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Generator Box styling */
+    .generator-container {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+      box-shadow: var(--glow);
+    }
+
+    .generator-info {
+      flex: 1;
+    }
+
+    .generator-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .email-display-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px 20px;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .email-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-icon-only {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.2s;
+      padding: 5px;
+    }
+
+    .btn-icon-only:hover {
+      color: var(--primary);
+    }
+
+    .generator-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .countdown-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--panel-border);
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+    }
+
+    .countdown-timer {
+      font-weight: bold;
+      color: var(--secondary);
+    }
+
+    /* Main Content Layout Grid */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 25px;
+      flex: 1;
+      min-height: 550px;
+    }
+
+    /* Inbox List styling */
+    .inbox-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .inbox-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .inbox-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .inbox-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .inbox-badge {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .inbox-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .inbox-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .inbox-list::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    .email-item {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .email-item:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .email-item.active {
+      background: rgba(129, 140, 248, 0.07);
+      border-left: 3px solid var(--primary);
+    }
+
+    .email-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .email-sender {
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .email-time {
+      font-size: 11px;
+      color: var(--text-dark);
+      font-family: 'Space Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .email-subject {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .email-attachments-icon {
+      font-size: 11px;
+      color: var(--text-dark);
+      margin-left: 5px;
+    }
+
+    .inbox-empty {
+      padding: 50px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .inbox-empty i {
+      font-size: 48px;
+      background: linear-gradient(135deg, rgba(129,140,248,0.2) 0%, rgba(16,185,129,0.2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Email Details View styling */
+    .viewer-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .viewer-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      color: var(--text-muted);
+      flex: 1;
+      padding: 50px;
+    }
+
+    .viewer-placeholder i {
+      font-size: 80px;
+      color: rgba(255, 255, 255, 0.02);
+      border: 2px dashed rgba(255,255,255,0.03);
+      padding: 40px;
+      border-radius: 50%;
+    }
+
+    .viewer-header {
+      padding: 25px 30px;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .viewer-meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .viewer-subject {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .viewer-meta-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .viewer-meta-item {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .viewer-meta-item strong {
+      color: #ffffff;
+    }
+
+    .viewer-tabs {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(129, 140, 248, 0.15);
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .viewer-body {
+      flex: 1;
+      background: #ffffff;
+      color: #1f2937;
+      position: relative;
+    }
+
+    .viewer-body-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+    }
+
+    .viewer-body-text {
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      background: #0f172a;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .attachments-container {
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.15);
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .attachments-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-muted);
+    }
+
+    .attachments-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .attachment-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 8px 15px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+    }
+
+    /* Settings Modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: #111827;
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 500px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 15px;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 12px 15px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 25px;
+      border-top: 1px solid var(--panel-border);
+      padding-top: 15px;
+    }
+
+    /* Notification Popup */
+    .toast-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.95);
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 16px 24px;
+      color: #ffffff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-success {
+      border-left-color: var(--secondary);
+    }
+
+    /* Spinner Animation */
+    .spinner {
+      animation: rotate 1.5s linear infinite;
+    }
+
+    @keyframes rotate {
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <i class="fa-solid fa-envelope-open-text logo-icon"></i>
+      <span class="logo-text">ZipLoot TempMail</span>
+      <span class="logo-badge">SERVERLESS</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="openSettingsModal()">
+        <i class="fa-solid fa-gear"></i> Setup Config
+      </button>
+      <a href="https://github.com/Ziploot/unlimited-temp-mail" target="_blank" class="btn btn-primary">
+        <i class="fa-brands fa-github"></i> GitHub Repo
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main>
+    <!-- Generator Box -->
+    <div class="generator-container">
+      <div class="generator-info">
+        <div class="generator-title">Your Private Temporary Inbox</div>
+        <div class="email-display-wrapper">
+          <span class="email-display" id="active-email">No Address Generated</span>
+          <button class="btn-icon-only" onclick="copyEmailToClipboard()" title="Copy Email">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+      </div>
+      <div class="generator-actions">
+        <div class="countdown-wrapper" id="countdown-container" style="display: none;">
+          <i class="fa-regular fa-hourglass-half"></i>
+          Expires in: <span class="countdown-timer" id="countdown">60:00</span>
+        </div>
+        <button class="btn btn-secondary" onclick="generateNewEmail()">
+          <i class="fa-solid fa-arrows-rotate"></i> Generate New Address
+        </button>
+      </div>
+    </div>
+
+    <!-- Inbox App Layout Grid -->
+    <div class="app-grid">
+      <!-- Inbox list -->
+      <div class="inbox-card">
+        <div class="inbox-header">
+          <div class="inbox-title-wrapper">
+            <span class="inbox-title">Temporary Inbox</span>
+            <span class="inbox-badge" id="inbox-count">0</span>
+          </div>
+          <button class="btn-icon-only" onclick="refreshInbox(true)" id="refresh-btn" title="Refresh Inbox">
+            <i class="fa-solid fa-sync" id="refresh-icon"></i>
+          </button>
+        </div>
+        <div class="inbox-list" id="inbox-list-container">
+          <div class="inbox-empty">
+            <i class="fa-solid fa-envelope-open"></i>
+            <p>Your inbox is empty</p>
+            <span style="font-size: 12px; color: var(--text-dark)">Waiting for incoming emails... (Auto-polling active)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email details viewer -->
+      <div class="viewer-card" id="viewer-container">
+        <div class="viewer-placeholder">
+          <i class="fa-regular fa-envelope"></i>
+          <h3>No email selected</h3>
+          <p>Click on any message in the inbox to view its contents.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Settings Configuration Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Worker Configuration</h3>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cloudflare Worker API URL</label>
+        <input type="text" class="form-input" id="worker-api-url" placeholder="https://your-worker.your-subdomain.workers.dev">
+        <small style="color: var(--text-dark); margin-top: 5px; display: block;">The base URL of your deployed Cloudflare Worker.</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Custom Domain</label>
+        <input type="text" class="form-input" id="custom-domain" placeholder="yourdomain.com">
+        <small style="color: var(--text-dark); margin-top: 5px; display: block;">The custom domain bound to your Cloudflare Email Routing.</small>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeSettingsModal()">Cancel</button>
+        <button class="btn btn-secondary" onclick="saveSettings()">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // Constants & Default Values
+    let workerApiUrl = localStorage.getItem("temp_mail_worker_url") || "";
+    let customDomain = localStorage.getItem("temp_mail_custom_domain") || "";
+    let activeEmailAddress = localStorage.getItem("temp_mail_active_address") || "";
+    let expirationTime = localStorage.getItem("temp_mail_expiration_time") || null;
+    let selectedEmailKey = null;
+    let pollingInterval = null;
+    let countdownInterval = null;
+
+    // Load initial settings
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("worker-api-url").value = workerApiUrl;
+      document.getElementById("custom-domain").value = customDomain;
+
+      if (!workerApiUrl || !customDomain) {
+        openSettingsModal();
+      } else {
+        initMailbox();
+      }
+    });
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type === 'success' ? 'toast-success' : ''}`;
+      toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-info'}"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add("show"), 50);
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function openSettingsModal() {
+      document.getElementById("settings-modal").style.display = "flex";
+    }
+
+    function closeSettingsModal() {
+      if (!workerApiUrl || !customDomain) {
+        showToast("Please save worker configuration to connect.", "error");
+        return;
+      }
+      document.getElementById("settings-modal").style.display = "none";
+    }
+
+    function saveSettings() {
+      const urlInput = document.getElementById("worker-api-url").value.trim().replace(/\/$/, "");
+      const domainInput = document.getElementById("custom-domain").value.trim().toLowerCase();
+
+      if (!urlInput || !domainInput) {
+        showToast("Both fields are required!", "error");
+        return;
+      }
+
+      workerApiUrl = urlInput;
+      customDomain = domainInput;
+
+      localStorage.setItem("temp_mail_worker_url", workerApiUrl);
+      localStorage.setItem("temp_mail_custom_domain", customDomain);
+
+      document.getElementById("settings-modal").style.display = "none";
+      showToast("Configuration saved successfully!", "success");
+
+      initMailbox();
+    }
+
+    function initMailbox() {
+      // Clear intervals
+      clearInterval(pollingInterval);
+      clearInterval(countdownInterval);
+
+      if (activeEmailAddress && expirationTime && new Date().getTime() < parseInt(expirationTime)) {
+        document.getElementById("active-email").innerText = activeEmailAddress;
+        startCountdown(parseInt(expirationTime));
+        startPolling();
+        refreshInbox();
+      } else {
+        generateNewEmail();
+      }
+    }
+
+    function generateNewEmail() {
+      if (!workerApiUrl || !customDomain) {
+        openSettingsModal();
+        return;
+      }
+
+      // Generate a random local part (e.g., mail-xxxx)
+      const randomId = Math.random().toString(36).substring(2, 8);
+      const newAddress = `${randomId}@${customDomain}`;
+      
+      // Expire in 1 hour
+      const durationMs = 3600 * 1000;
+      const expTime = new Date().getTime() + durationMs;
+
+      activeEmailAddress = newAddress;
+      expirationTime = expTime;
+
+      localStorage.setItem("temp_mail_active_address", activeEmailAddress);
+      localStorage.setItem("temp_mail_expiration_time", expirationTime);
+
+      document.getElementById("active-email").innerText = activeEmailAddress;
+      
+      startCountdown(expTime);
+      startPolling();
+      refreshInbox();
+
+      // Clear viewer placeholder
+      document.getElementById("viewer-container").innerHTML = `
+        <div class="viewer-placeholder">
+          <i class="fa-regular fa-envelope"></i>
+          <h3>No email selected</h3>
+          <p>Click on any message in the inbox to view its contents.</p>
+        </div>
+      `;
+
+      showToast("New temporary address generated!", "success");
+    }
+
+    function startCountdown(endTime) {
+      clearInterval(countdownInterval);
+      document.getElementById("countdown-container").style.display = "flex";
+
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById("countdown").innerText = "EXPIRED";
+          document.getElementById("active-email").innerText = "Address Expired";
+          showToast("Temporary email address expired! Generating new one...", "info");
+          generateNewEmail();
+          return;
+        }
+
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById("countdown").innerText = 
+          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      };
+
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+
+    function copyEmailToClipboard() {
+      if (!activeEmailAddress || activeEmailAddress.includes("No Address")) return;
+      navigator.clipboard.writeText(activeEmailAddress).then(() => {
+        showToast("Address copied to clipboard!", "success");
+      });
+    }
+
+    function startPolling() {
+      clearInterval(pollingInterval);
+      // Poll every 5 seconds
+      pollingInterval = setInterval(() => {
+        refreshInbox(false);
+      }, 5000);
+    }
+
+    async function refreshInbox(showVisualFeedback = false) {
+      if (!workerApiUrl || !activeEmailAddress) return;
+
+      const refreshIcon = document.getElementById("refresh-icon");
+      if (showVisualFeedback) refreshIcon.classList.add("spinner");
+
+      try {
+        const res = await fetch(`${workerApiUrl}/api/inbox?email=${encodeURIComponent(activeEmailAddress)}`);
+        if (!res.ok) throw new Error("API request failed");
+        
+        const emails = await res.json();
+        
+        document.getElementById("inbox-count").innerText = emails.length;
+        renderInboxList(emails);
+        
+        if (showVisualFeedback) showToast("Inbox refreshed!", "success");
+      } catch (err) {
+        console.error("Inbox refresh error:", err);
+        if (showVisualFeedback) showToast("Failed to connect to Worker API.", "error");
+      } finally {
+        if (showVisualFeedback) {
+          setTimeout(() => refreshIcon.classList.remove("spinner"), 500);
+        }
+      }
+    }
+
+    function renderInboxList(emails) {
+      const container = document.getElementById("inbox-list-container");
+      
+      if (!emails || emails.length === 0) {
+        container.innerHTML = `
+          <div class="inbox-empty">
+            <i class="fa-solid fa-envelope-open"></i>
+            <p>Your inbox is empty</p>
+            <span style="font-size: 12px; color: var(--text-dark)">Waiting for incoming emails... (Auto-polling active)</span>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+      emails.forEach(email => {
+        const item = document.createElement("div");
+        item.className = `email-item ${selectedEmailKey === email.key ? 'active' : ''}`;
+        item.onclick = () => selectEmail(email.key, item);
+
+        const dateStr = new Date(email.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        item.innerHTML = `
+          <div class="email-item-header">
+            <span class="email-sender">${escapeHTML(email.from.name || email.from.address)}</span>
+            <span class="email-time">${dateStr}</span>
+          </div>
+          <div class="email-subject">
+            ${escapeHTML(email.subject)}
+            ${email.hasAttachments ? '<i class="fa-solid fa-paperclip email-attachments-icon" title="Has attachments"></i>' : ''}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function selectEmail(key, element) {
+      selectedEmailKey = key;
+      
+      // Update active list classes
+      document.querySelectorAll(".email-item").forEach(item => item.classList.remove("active"));
+      element.classList.add("active");
+
+      // Load loader in viewer
+      document.getElementById("viewer-container").innerHTML = `
+        <div class="viewer-placeholder">
+          <i class="fa-solid fa-circle-notch spinner" style="font-size: 40px; color: var(--primary)"></i>
+          <p>Loading email contents...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`${workerApiUrl}/api/email?key=${encodeURIComponent(key)}`);
+        if (!res.ok) throw new Error("Failed to load email");
+
+        const email = await res.json();
+        renderEmailDetails(email);
+      } catch (err) {
+        showToast("Error loading email content.", "error");
+        document.getElementById("viewer-container").innerHTML = `
+          <div class="viewer-placeholder" style="color: var(--danger)">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 48px"></i>
+            <h3>Failed to load email</h3>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderEmailDetails(email) {
+      const container = document.getElementById("viewer-container");
+      const cleanDate = new Date(email.date).toLocaleString();
+
+      // Check attachments
+      let attachmentsSection = "";
+      if (email.attachments && email.attachments.length > 0) {
+        attachmentsSection = `
+          <div class="attachments-container">
+            <span class="attachments-title"><i class="fa-solid fa-paperclip"></i> Attachments (${email.attachments.length})</span>
+            <div class="attachments-list">
+              ${email.attachments.map(att => `
+                <div class="attachment-item">
+                  <i class="fa-regular fa-file"></i>
+                  <span>${escapeHTML(att.filename)} (${formatBytes(att.size)})</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="viewer-header">
+          <div class="viewer-meta-row">
+            <span class="viewer-subject">${escapeHTML(email.subject)}</span>
+            <button class="btn btn-icon-only" onclick="deleteEmail('${selectedEmailKey}')" style="color: var(--danger);" title="Delete Email">
+              <i class="fa-regular fa-trash-can"></i> Delete
+            </button>
+          </div>
+          <div class="viewer-meta-info">
+            <span class="viewer-meta-item"><strong>From:</strong> ${escapeHTML(email.from.name ? `${email.from.name} <${email.from.address}>` : email.from.address)}</span>
+            <span class="viewer-meta-item"><strong>Date:</strong> ${cleanDate}</span>
+          </div>
+          
+          <div class="viewer-tabs">
+            <button class="tab-btn active" id="tab-html" onclick="switchViewerTab('html')">HTML View</button>
+            <button class="tab-btn" id="tab-text" onclick="switchViewerTab('text')">Plain Text</button>
+          </div>
+        </div>
+
+        <div class="viewer-body">
+          <iframe class="viewer-body-iframe" id="email-body-html" sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
+          <div class="viewer-body-text" id="email-body-text"></div>
+        </div>
+
+        ${attachmentsSection}
+      `;
+
+      // Render HTML in sandboxed iframe safely
+      const iframe = document.getElementById("email-body-html");
+      const htmlContent = email.html || `<div style="font-family: sans-serif; padding: 20px; color: #1f2937;">${email.text.replace(/\n/g, '<br>')}</div>`;
+      
+      iframe.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 20px; }
+            a { color: #4f46e5; text-decoration: underline; }
+            img { max-width: 100%; height: auto; }
+          </style>
+        </head>
+        <body>
+          ${htmlContent}
+        </body>
+        </html>
+      `;
+
+      // Set plaintext content
+      document.getElementById("email-body-text").innerText = email.text || "No text content available.";
+    }
+
+    function switchViewerTab(tab) {
+      const htmlTab = document.getElementById("tab-html");
+      const textTab = document.getElementById("tab-text");
+      const htmlIframe = document.getElementById("email-body-html");
+      const textDiv = document.getElementById("email-body-text");
+
+      if (tab === 'html') {
+        htmlTab.classList.add("active");
+        textTab.classList.remove("active");
+        htmlIframe.style.display = "block";
+        textDiv.style.display = "none";
+      } else {
+        htmlTab.classList.remove("active");
+        textTab.classList.add("active");
+        htmlIframe.style.display = "none";
+        textDiv.style.display = "block";
+      }
+    }
+
+    async function deleteEmail(key) {
+      if (!confirm("Are you sure you want to delete this email?")) return;
+
+      try {
+        const res = await fetch(`${workerApiUrl}/api/email?key=${encodeURIComponent(key)}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error("Delete failed");
+
+        showToast("Email deleted.", "success");
+        selectedEmailKey = null;
+        
+        // Reset viewer
+        document.getElementById("viewer-container").innerHTML = `
+          <div class="viewer-placeholder">
+            <i class="fa-regular fa-envelope"></i>
+            <h3>No email selected</h3>
+            <p>Click on any message in the inbox to view its contents.</p>
+          </div>
+        `;
+        
+        refreshInbox();
+      } catch (err) {
+        showToast("Failed to delete email.", "error");
+      }
+    }
+
+    // Helper functions
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+      if (!+bytes) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    }
+  </script>
+</body>
+</html>
