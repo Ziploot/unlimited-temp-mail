@@ -1,13 +1,18 @@
-# ZipLoot Private Serverless Temp Mail Installer
+# [ZipLoot] Private Temp Mail Installer
 # ==============================================
 try {
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "   ⚡ ZIPLOOT PRIVATE TEMP MAIL CONFIGURATOR" -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "   Serverless | Cloudflare Workers | Vercel | \$0" -ForegroundColor Green
+    Write-Host "   Serverless | Cloudflare Workers & Pages | \$0" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host
+
+    # Redirect home directories to avoid Windows Junction perm errors
+    $env:USERPROFILE = "C:\Users\user\AppData\Local"
+    $env:HOMEPATH = "\Users\user\AppData\Local"
+    $env:HOME = "C:\Users\user\AppData\Local"
 
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
     if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = $pwd }
@@ -15,7 +20,8 @@ try {
     # 1. Check Cloudflare Login
     Write-Host "[INFO] Checking Cloudflare authentication status..." -ForegroundColor Blue
     $whoami = npx -y wrangler whoami 2>&1
-    if ($whoami -match "Not logged in" -or $whoami -match "Authentication Error" -or $LASTEXITCODE -ne 0) {
+    $whoamiStr = Out-String -InputObject $whoami
+    if ($whoamiStr -match "Not logged in" -or $whoamiStr -match "Authentication Error" -or $LASTEXITCODE -ne 0) {
         Write-Host "[WARN] You are not logged in to Cloudflare." -ForegroundColor Yellow
         Write-Host "Opening login page. Please authorize Wrangler in your browser..." -ForegroundColor Yellow
         npx -y wrangler login
@@ -30,7 +36,6 @@ try {
     $kvOutputStr = Out-String -InputObject $kvOutput
     
     $kvId = ""
-    # Extract KV ID using regex
     if ($kvOutputStr -match 'id\s*=\s*"([a-f0-9]{32})"') {
         $kvId = $Matches[1]
     } elseif ($kvOutputStr -match 'id":\s*"([a-f0-9]{32})"') {
@@ -86,18 +91,50 @@ try {
     Write-Host "[INFO] Deploying Worker to Cloudflare..." -ForegroundColor Blue
     $deployOutput = npx -y wrangler deploy 2>&1
     $deployOutputStr = Out-String -InputObject $deployOutput
-    Write-Host $deployOutputStr
-
+    
     # Extract worker URL
     $workerUrl = ""
     if ($deployOutputStr -match 'https://unlimited-temp-mail\.[a-zA-Z0-9-]+\.workers\.dev') {
         $workerUrl = $Matches[0]
         Write-Host "[SUCCESS] Worker deployed successfully!" -ForegroundColor Green
         Write-Host "Worker URL: $workerUrl" -ForegroundColor Yellow
+    } else {
+        Write-Host "[WARN] Could not automatically extract Worker URL. Please check deployment logs." -ForegroundColor Yellow
+        Write-Host $deployOutputStr -ForegroundColor DarkGray
     }
     Write-Host
 
-    # 5. Cloudflare Email Routing instructions
+    # 5. Inject Worker URL into public/index.html config and deploy Pages
+    if (-not [string]::IsNullOrEmpty($workerUrl)) {
+        $htmlPath = Join-Path $scriptDir "public/index.html"
+        if (Test-Path $htmlPath) {
+            $htmlContent = Get-Content $htmlPath -Raw
+            $htmlContent = $htmlContent -replace 'let workerApiUrl = localStorage\.getItem\("temp_mail_worker_url"\) \|\| "";', "let workerApiUrl = localStorage.getItem(`"temp_mail_worker_url`") || `"$workerUrl`";"
+            Set-Content -Path $htmlPath -Value $htmlContent
+            Write-Host "[SUCCESS] Worker URL injected into Web Client config!" -ForegroundColor Green
+        }
+    }
+    Write-Host
+
+    # 6. Deploy Pages
+    Write-Host "[INFO] Deploying Web Client to Cloudflare Pages..." -ForegroundColor Blue
+    # Create project if not exists
+    npx -y wrangler pages project create unlimited-temp-mail --production-branch main 2>&1 | Out-Null
+    # Deploy public folder
+    $pagesOutput = npx -y wrangler pages deploy public --project-name unlimited-temp-mail 2>&1
+    $pagesOutputStr = Out-String -InputObject $pagesOutput
+    
+    $pagesUrl = ""
+    if ($pagesOutputStr -match 'https://unlimited-temp-mail\.[a-zA-Z0-9-]+\.pages\.dev') {
+        $pagesUrl = $Matches[0]
+        Write-Host "[SUCCESS] Web Dashboard deployed successfully!" -ForegroundColor Green
+    } else {
+        Write-Host "[WARN] Could not extract Pages URL. Deployment log:" -ForegroundColor Yellow
+        Write-Host $pagesOutputStr -ForegroundColor DarkGray
+    }
+    Write-Host
+
+    # 7. Cloudflare Email Routing instructions
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "⚡ CLOUDFLARE EMAIL ROUTING SETUP" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
@@ -110,16 +147,16 @@ try {
     Write-Host "6. Click Save. Now all emails sent to your domain route to your Worker!" -ForegroundColor Green
     Write-Host
 
-    # 6. Vercel deployment instructions
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "⚡ DEPLOY CLIENT DASHBOARD TO VERCEL" -ForegroundColor Green
+    Write-Host "🎉 DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "To host the beautiful client web dashboard for free:"
-    Write-Host "1. Create a free account on Vercel."
-    Write-Host "2. Install Vercel CLI locally (npm install -g vercel) or import to GitHub."
-    Write-Host "3. In this project folder, run command:"
-    Write-Host "   vercel --prod" -ForegroundColor Yellow
-    Write-Host "4. Open the deployed Vercel URL, click 'Setup Config' and enter your Worker URL!" -ForegroundColor Green
+    if (-not [string]::IsNullOrEmpty($pagesUrl)) {
+        Write-Host "🔗 Web Dashboard: $pagesUrl" -ForegroundColor Yellow
+    }
+    if (-not [string]::IsNullOrEmpty($workerUrl)) {
+        Write-Host "⚙️ Worker API: $workerUrl" -ForegroundColor Yellow
+    }
+    Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host
 
     Read-Host "Setup complete. Press Enter to exit..."
