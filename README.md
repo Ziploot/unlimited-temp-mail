@@ -37,3 +37,5 @@ curl -sL https://raw.githubusercontent.com/Ziploot/unlimited-temp-mail/main/inst
 4. Set Action to **Send to Worker**.
 5. Set Destination to **unlimited-temp-mail**.
 6. Save. All emails sent to any address on your domain will now route to your Worker!
+
+ 
