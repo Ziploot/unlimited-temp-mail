@@ -1,5 +1,7 @@
 # ⚡ Private Serverless Temporary Email Service
 
+[![ZipLoot.app](https://img.shields.io/badge/Powered%20By-ZipLoot.app-818cf8?style=for-the-badge&logo=rocket)](https://ziploot.app)
+
 A 100% free ($0 Setup), self-hosted temporary email (disposable mail) service built on Cloudflare Workers (Email Routing & KV Store) and Cloudflare Pages. 
 
 Use this tool to generate unlimited temp emails on your custom domain, automatically forwarding copies to Gmail (optional) and viewing HTML emails securely on a beautiful dark-mode glassmorphic dashboard.
@@ -38,4 +40,18 @@ curl -sL https://raw.githubusercontent.com/Ziploot/unlimited-temp-mail/main/inst
 5. Set Destination to **unlimited-temp-mail**.
 6. Save. All emails sent to any address on your domain will now route to your Worker!
 
- 
+---
+
+## 🌐 Discover More Free Tools on ZipLoot
+
+Check out our full suite of automated web applications and developer tools at **[https://ziploot.app](https://ziploot.app)**:
+
+- 🎥 **[Ad-Free Video Downloader](https://ziploot.app/addfree)** — Fast social video downloads with zero popups.
+- 📄 **[Unlimited PDF Toolset](https://ziploot.app/pdf-toolset)** — Merge, split, compress, and edit PDFs in browser.
+- 📹 **[YouTube Downloader](https://ziploot.app/youtube-downloader)** — Download high quality YouTube videos and audio for free.
+- 🎨 **[Watermark Remover](https://ziploot.app/watermark-remover)** — Remove image watermarks automatically.
+- 🌐 **[Image Translator](https://ziploot.app/image-translator)** — Translate text inside images online instantly.
+
+---
+
+*Maintained with ❤️ by the **[ZipLoot Team](https://ziploot.app)**.*
